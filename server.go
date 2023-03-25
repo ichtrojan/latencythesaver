@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"log"
@@ -32,13 +31,9 @@ func main() {
 		randIndex := rand.Intn(len(messages))
 		message := messages[randIndex]
 
-		response := map[string]string{
-			"amount":  fmt.Sprintf("GBP %d", amount),
-			"message": message,
-		}
+		fmt.Fprintf(writer, "<h1>%s</h1>", message)
 
-		writer.Header().Set("Content-type", "application/json")
-		_ = json.NewEncoder(writer).Encode(response)
+		fmt.Fprintf(writer, "<h3>£%d</h3>", amount)
 
 		return
 	})
