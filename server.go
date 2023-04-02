@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	database "github.com/ichtrojan/latencythesaver/redis"
+	"github.com/joho/godotenv"
 	"html/template"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
@@ -51,7 +53,15 @@ func main() {
 	})
 
 	router.Get("/save", func(writer http.ResponseWriter, request *http.Request) {
-		if err := database.ConnectRedis("host.docker.internal", "6379", "", "tcp"); err != nil {
+		_ = godotenv.Load()
+
+		redisHost, exist := os.LookupEnv("REDIS_HOST")
+
+		if !exist {
+			log.Fatal("REDIS_HOST not set in .env")
+		}
+
+		if err := database.ConnectRedis(redisHost, "6379", "", "tcp"); err != nil {
 			log.Fatal(err)
 		}
 
