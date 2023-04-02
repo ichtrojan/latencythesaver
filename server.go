@@ -51,7 +51,7 @@ func main() {
 	})
 
 	router.Get("/save", func(writer http.ResponseWriter, request *http.Request) {
-		if err := database.ConnectRedis("172.17.0.1", "6379", "", "tcp"); err != nil {
+		if err := database.ConnectRedis("host.docker.internal", "6379", "", "tcp"); err != nil {
 			log.Fatal(err)
 		}
 
