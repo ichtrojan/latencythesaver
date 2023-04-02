@@ -1,13 +1,21 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/go-chi/chi/v5"
+	database "github.com/ichtrojan/latencythesaver/redis"
+	"html/template"
 	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 )
+
+type Data struct {
+	Amount  int
+	Message string
+}
 
 func main() {
 	router := chi.NewRouter()
@@ -31,11 +39,45 @@ func main() {
 		randIndex := rand.Intn(len(messages))
 		message := messages[randIndex]
 
-		fmt.Fprintf(writer, "<h1>%s</h1>", message)
+		tmpl := template.Must(template.ParseFiles("index.html"))
 
-		fmt.Fprintf(writer, "<h3>£%d</h3>", amount)
+		data := Data{
+			Amount:  amount,
+			Message: message,
+		}
 
-		return
+		_ = tmpl.Execute(writer, data)
+
+	})
+
+	router.Get("/save", func(writer http.ResponseWriter, request *http.Request) {
+		if err := database.ConnectRedis("127.0.0.1", "6379", "", "tcp"); err != nil {
+			log.Fatal(err)
+		}
+
+		latency, _ := database.Redis.Get("latency_the_saver").Result()
+
+		amount, _ := strconv.Atoi(request.FormValue("amount"))
+
+		if latency == "" {
+			data := []int{amount}
+
+			jsonData, _ := json.Marshal(data)
+
+			database.Redis.Set("latency_the_saver", string(jsonData), 0)
+		} else {
+			var array []int
+
+			_ = json.Unmarshal([]byte(latency), &array)
+
+			array = append(array, amount)
+
+			jsonData, _ := json.Marshal(array)
+
+			database.Redis.Set("latency_the_saver", string(jsonData), 0)
+		}
+
+		http.Redirect(writer, request, "/", http.StatusMovedPermanently)
 	})
 
 	if err := http.ListenAndServe(":7777", router); err != nil {
