@@ -61,7 +61,25 @@ func main() {
 			log.Fatal("REDIS_HOST not set in .env")
 		}
 
-		if err := database.ConnectRedis(redisHost, "6379", "", "tcp"); err != nil {
+		redisPort, exist := os.LookupEnv("REDIS_PORT")
+
+		if !exist {
+			log.Fatal("REDIS_PORT not set in .env")
+		}
+
+		redisPass, exist := os.LookupEnv("REDIS_PASS")
+
+		if !exist {
+			log.Fatal("REDIS_PASS not set in .env")
+		}
+
+		redisScheme, exist := os.LookupEnv("REDIS_SCHEME")
+
+		if !exist {
+			log.Fatal("REDIS_SCHEME not set in .env")
+		}
+
+		if err := database.ConnectRedis(redisHost, redisPort, redisPass, redisScheme); err != nil {
 			log.Fatal(err)
 		}
 
