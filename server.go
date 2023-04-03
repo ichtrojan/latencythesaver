@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	database "github.com/ichtrojan/latencythesaver/redis"
 	"github.com/joho/godotenv"
 	"html/template"
@@ -52,16 +54,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	latency, _ := database.Redis.Get("latency_the_saver").Result()
-
-	var savedAmounts []int
-
-	_ = json.Unmarshal([]byte(latency), &savedAmounts)
+	router.Use(middleware.Logger)
 
 	router.Get("/", func(writer http.ResponseWriter, request *http.Request) {
 		var amount int
 
 		var message string
+
+		var savedAmounts []int
+
+		latency, _ := database.Redis.Get("latency_the_saver").Result()
+
+		_ = json.Unmarshal([]byte(latency), &savedAmounts)
 
 		for {
 			// Initialize the random number generator
@@ -97,8 +101,12 @@ func main() {
 		_ = tmpl.Execute(writer, data)
 	})
 
-	router.Get("/save", func(writer http.ResponseWriter, request *http.Request) {
+	router.Post("/save", func(writer http.ResponseWriter, request *http.Request) {
 		amount, _ := strconv.Atoi(request.FormValue("amount"))
+
+		fmt.Println("ok", amount)
+
+		latency, _ := database.Redis.Get("latency_the_saver").Result()
 
 		if latency == "" {
 			data := []int{amount}
@@ -107,11 +115,22 @@ func main() {
 
 			database.Redis.Set("latency_the_saver", string(jsonData), 0)
 		} else {
+			var savedAmounts []int
+
+			fmt.Println(latency)
+
+			_ = json.Unmarshal([]byte(latency), &savedAmounts)
+
 			savedAmounts = append(savedAmounts, amount)
+
+			fmt.Println(savedAmounts)
 
 			jsonData, _ := json.Marshal(savedAmounts)
 
-			database.Redis.Set("latency_the_saver", string(jsonData), 0)
+			e := database.Redis.Set("latency_the_saver", string(jsonData), 0).Err()
+			if e != nil {
+				fmt.Println(e)
+			}
 		}
 
 		http.Redirect(writer, request, "/", http.StatusMovedPermanently)

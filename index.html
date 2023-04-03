@@ -17,7 +17,7 @@
             text-align: center;
             text-decoration: none;
             display: inline-block;
-            font-size: 16px;
+            font-size: 200px;
             margin: 0;
             cursor: pointer;
             width: 100%;
@@ -29,13 +29,23 @@
         h1 {
             font-size: 500px;
         }
+        .top {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 200px;
+        }
     </style>
 </head>
 <body>
+<div class="top">
+    💷
+</div>
 <div class="container">
     <h1>£{{.Amount}}</h1>
 </div>
-<form action="/save" onsubmit="alert({{.Message}})">
+<form action="/save" onsubmit="alert({{.Message}})" method="post">
     <label>
         <input value={{.Amount}} type="number" name="amount" hidden>
     </label>
