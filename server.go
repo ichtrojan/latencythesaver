@@ -104,8 +104,6 @@ func main() {
 	router.Post("/save", func(writer http.ResponseWriter, request *http.Request) {
 		amount, _ := strconv.Atoi(request.FormValue("amount"))
 
-		fmt.Println("ok", amount)
-
 		latency, _ := database.Redis.Get("latency_the_saver").Result()
 
 		if latency == "" {
@@ -117,19 +115,16 @@ func main() {
 		} else {
 			var savedAmounts []int
 
-			fmt.Println(latency)
-
 			_ = json.Unmarshal([]byte(latency), &savedAmounts)
 
 			savedAmounts = append(savedAmounts, amount)
 
-			fmt.Println(savedAmounts)
-
 			jsonData, _ := json.Marshal(savedAmounts)
 
-			e := database.Redis.Set("latency_the_saver", string(jsonData), 0).Err()
-			if e != nil {
-				fmt.Println(e)
+			err := database.Redis.Set("latency_the_saver", string(jsonData), 0).Err()
+
+			if err != nil {
+				fmt.Println(err)
 			}
 		}
 
